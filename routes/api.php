@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\ExerciseController;
+use App\Http\Controllers\UserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -20,3 +22,16 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 });
 Route::post('signup', [AuthController::class, 'signup']);
 Route::post('login', [AuthController::class, 'login']);
+
+Route::middleware(['auth:sanctum'])->group(function () {
+
+    Route::post('/add-user-report', [UserController::class, 'store']);
+    Route::get('/user-reports', [UserController::class, 'index']);
+    Route::get('/user-single-report/{id}', [UserController::class, 'show']);
+    Route::get('/profile', [UserController::class, 'profile']);
+
+    Route::post('exercises', [ExerciseController::class, 'store']);
+    Route::get('exercises', [ExerciseController::class, 'index']);
+    Route::post('users/current-exercise', [ExerciseController::class, 'setCurrentExercise']);
+
+});
