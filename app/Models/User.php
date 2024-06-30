@@ -17,14 +17,7 @@ class User extends Authenticatable
      *
      * @var array<int, string>
      */
-    protected $fillable = [
-        'name',
-        'age',
-        'gender',
-        'email',
-        'password',
-        'role', // Add this line
-    ];
+    protected $guarded = [];
 
     /**
      * The attributes that should be hidden for serialization.
@@ -44,4 +37,9 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
+    protected $with = ['currentExercise'];
+    public function currentExercise()
+    {
+        return $this->belongsTo(Exercise::class, 'current_exercise_id','id');
+    }
 }
