@@ -18,4 +18,22 @@ class Authenticate extends Middleware
             return route('login');
         }
     }
+
+    /**
+     * Handle unauthenticated user.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @param array $guards
+     * @return void
+     *
+     * @throws \Illuminate\Auth\AuthenticationException
+     */
+    protected function unauthenticated($request, array $guards)
+    {
+        if ($request->expectsJson()) {
+            abort(response()->json(['status'=>false,'message' => 'Session expired. Please log in again.'], 401));
+        }
+
+        parent::unauthenticated($request, $guards);
+    }
 }

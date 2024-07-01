@@ -35,3 +35,6 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('users/current-exercise', [ExerciseController::class, 'setCurrentExercise']);
 
 });
+Route::get('/login', function () {
+    return response()->json(['status'=>false,'message' => 'you are not authorised'], 401);
+})->name('login');
