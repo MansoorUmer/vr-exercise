@@ -15,6 +15,8 @@ class ExerciseController extends Controller
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
             'exercise_video' => 'required', // 20MB limit, adjust as needed
+            'severity_level' => 'required', //
+            'level_index' => 'required', //
         ]);
         if ($validator->fails()) {
             $data['data'] = null;
