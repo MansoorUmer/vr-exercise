@@ -28,9 +28,9 @@ class AuthController extends Controller
         $userCount = User::all();
         if(count($userCount) > 0)
         {
-            $role = 'admin';
-        }else{
             $role = 'user';
+        }else{
+            $role = 'admin';
 
         }
         $user = User::create([
