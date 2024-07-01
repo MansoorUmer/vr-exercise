@@ -14,6 +14,7 @@ class ExerciseController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
+            'exercise_video' => 'required', // 20MB limit, adjust as needed
         ]);
         if ($validator->fails()) {
             $data['data'] = null;
@@ -21,9 +22,28 @@ class ExerciseController extends Controller
             $data['message'] =$validator->errors()->first();
             return response()->json($data, 200);
         }
-        $exercise = Exercise::create([
-            'name' => $request->name,
-        ]);
+
+        if ($request->hasFile('exercise_video'))
+        {
+            $uploadedFiles = $request->file('exercise_video');
+
+            $file = $uploadedFiles; // Handle a single file
+            $filename = time() . '_' . $file->getClientOriginalName();
+            if (!file_exists(public_path('uploads/videos/'))) {
+                mkdir(public_path('uploads/videos/'), 0777, true);
+            }
+            $file->storeAs('uploads/' . $request->severity_level ,$filename);
+            $folderPath = "uploads/media/" . $filename;
+
+                // Store the file details in the database
+            $exercise = Exercise::create([
+                'name' => $request->name ?? '',
+                'filename' => $folderPath,
+                'severity_level' => $request->severity_level,
+                'level_index' => $request->level_index,
+            ]);
+        }
+
         $data['data']=$exercise;
         $data['status'] = true;
         $data['message'] = 'Exercise Created Successfully.';
