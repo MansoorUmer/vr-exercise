@@ -10,8 +10,8 @@ class Exercise extends Model
     use HasFactory;
     protected $table = 'exercises';
 
-    protected $fillable = ['name'];
-
+//    protected $fillable = ['name'];
+    protected $guarded = [];
 
     public function users()
     {
