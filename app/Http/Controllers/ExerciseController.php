@@ -31,11 +31,11 @@ class ExerciseController extends Controller
 
             $file = $uploadedFiles; // Handle a single file
             $filename = time() . '_' . $file->getClientOriginalName();
-            if (!file_exists(public_path('uploads/'. $request->severity_level))) {
-                mkdir(public_path('uploads/'. $request->severity_level), 0777, true);
+            if (!file_exists(public_path('uploads/videos/'))) {
+                mkdir(public_path('uploads/videos/'), 0777, true);
             }
-            $file->storeAs('uploads/' . $request->severity_level ,$filename);
-            $folderPath = "uploads/". $request->severity_level.'/' . $filename;
+            $file->storeAs('uploads/videos/',$filename);
+            $folderPath = "uploads/videos/" . $filename;
 
                 // Store the file details in the database
             $exercise = Exercise::create([
