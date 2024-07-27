@@ -56,19 +56,52 @@ class ImageProcessingController extends Controller
 
     private function resizeImage($sourcePath, $destPath, $width, $height)
     {
-        list($originalWidth, $originalHeight) = getimagesize($sourcePath);
-        $image_p = imagecreatetruecolor($width, $height);
-        $image = imagecreatefromjpeg($sourcePath);
+        $imageType = exif_imagetype($sourcePath);
 
-        // Resize the image
+        switch ($imageType) {
+            case IMAGETYPE_JPEG:
+                $image = imagecreatefromjpeg($sourcePath);
+                break;
+            case IMAGETYPE_PNG:
+                $image = imagecreatefrompng($sourcePath);
+                break;
+            case IMAGETYPE_GIF:
+                $image = imagecreatefromgif($sourcePath);
+                break;
+            default:
+                throw new \Exception('Unsupported image type.');
+        }
+
+        $originalWidth = imagesx($image);
+        $originalHeight = imagesy($image);
+        $image_p = imagecreatetruecolor($width, $height);
+
+        if ($imageType == IMAGETYPE_PNG) {
+            // Preserve transparency for PNG images
+            imagealphablending($image_p, false);
+            imagesavealpha($image_p, true);
+            $transparent = imagecolorallocatealpha($image_p, 0, 0, 0, 127);
+            imagefilledrectangle($image_p, 0, 0, $width, $height, $transparent);
+        }
+
         imagecopyresampled($image_p, $image, 0, 0, 0, 0, $width, $height, $originalWidth, $originalHeight);
 
-        // Save the resized image
-        imagejpeg($image_p, $destPath, 90);
+        switch ($imageType) {
+            case IMAGETYPE_JPEG:
+                imagejpeg($image_p, $destPath, 90);
+                break;
+            case IMAGETYPE_PNG:
+                imagepng($image_p, $destPath);
+                break;
+            case IMAGETYPE_GIF:
+                imagegif($image_p, $destPath);
+                break;
+        }
 
         // Free up memory
         imagedestroy($image);
         imagedestroy($image_p);
     }
 }
+
 
