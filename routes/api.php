@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ExerciseController;
+use App\Http\Controllers\ImageProcessingController;
 use App\Http\Controllers\UserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -33,6 +34,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('exercises', [ExerciseController::class, 'store']);
     Route::get('exercises', [ExerciseController::class, 'index']);
     Route::post('users/current-exercise', [ExerciseController::class, 'setCurrentExercise']);
+
+    Route::post('/process-images',[ImageProcessingController::class,'processImages']);
 
 });
 Route::get('/login', function () {
