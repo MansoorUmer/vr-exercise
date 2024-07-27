@@ -44,7 +44,7 @@ class ImageProcessingController extends Controller
             $image->save();
 
             // Call Python script to make prediction
-            $process = new Process(['python3', base_path('/var/www/vr-excercise'), $modelPath, $processedImagePath]);
+            $process = new Process(['python3', base_path('/var/www/vr-excercise/predict.py'), $modelPath, $processedImagePath]);
             $process->run();
 
             if (!$process->isSuccessful()) {
