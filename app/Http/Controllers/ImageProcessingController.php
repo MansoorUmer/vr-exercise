@@ -21,22 +21,16 @@ class ImageProcessingController extends Controller
         $modelPath = public_path('saved_model.h5');
 
         foreach ($images as $index => $base64Image) {
-            // Decode and save the original image
-            $decodedImage = base64_decode($base64Image);
-            $originalImageName = 'original_image_' . $index . '.jpg';
-            $originalImagePath = storage_path('app/public/originals/' . $originalImageName);
-            Storage::put('public/originals/' . $originalImageName, $decodedImage);
+            // Decode and upload the original image
+            $originalImagePath = $this->uploadImage($base64Image, 'originals/');
 
-            // Preprocess the image (resize) using GD Library
-            $processedImageName = 'processed_image_' . $index . '.jpg';
-            $processedImagePath = storage_path('app/public/processed/' . $processedImageName);
-
-            $this->resizeImage($originalImagePath, $processedImagePath, 224, 224);
+            // Preprocess the image (resize)
+            $processedImagePath = $this->resizeImage($originalImagePath, 224, 224, 'processed/');
 
             // Store the image details in the database
             $image = new ImageModel();
             $image->user_id = $userId;
-            $image->image_path = 'public/processed/' . $processedImageName;
+            $image->image_path = $processedImagePath;
             $image->save();
 
             // Call Python script to make prediction
@@ -54,10 +48,34 @@ class ImageProcessingController extends Controller
         return response()->json(['predictions' => $predictions], 200);
     }
 
-    private function resizeImage($sourcePath, $destPath, $width, $height)
+    private function uploadImage($base64Image, $directory = '')
     {
+            if (!empty($base64Image)) {
+                $base64Image = explode(";base64,", $base64Image);
+                $image_base64 = base64_decode($base64Image[1]);
+                $filename = uniqid() . '.jpg';
+                $filePath = storage_path('app/public/' . $directory . $filename);
+
+                file_put_contents($filePath, $image_base64);
+
+                return 'public/' . $directory . $filename;
+            }
+
+        return '';
+    }
+
+    private function resizeImage($sourcePath, $width, $height, $directory)
+    {
+        if (!file_exists($sourcePath)) {
+            throw new \Exception("Source file not found: $sourcePath");
+        }
+
         $imageType = exif_imagetype($sourcePath);
-        dd($imageType);
+
+        if ($imageType === false) {
+            throw new \Exception("Unable to determine image type for file: $sourcePath");
+        }
+
         switch ($imageType) {
             case IMAGETYPE_JPEG:
                 $image = imagecreatefromjpeg($sourcePath);
@@ -86,22 +104,25 @@ class ImageProcessingController extends Controller
 
         imagecopyresampled($image_p, $image, 0, 0, 0, 0, $width, $height, $originalWidth, $originalHeight);
 
+        $processedImageName = uniqid() . '.jpg';
+        $processedImagePath = storage_path('app/public/' . $directory . $processedImageName);
+
         switch ($imageType) {
             case IMAGETYPE_JPEG:
-                imagejpeg($image_p, $destPath, 90);
+                imagejpeg($image_p, $processedImagePath, 90);
                 break;
             case IMAGETYPE_PNG:
-                imagepng($image_p, $destPath);
+                imagepng($image_p, $processedImagePath);
                 break;
             case IMAGETYPE_GIF:
-                imagegif($image_p, $destPath);
+                imagegif($image_p, $processedImagePath);
                 break;
         }
 
         // Free up memory
         imagedestroy($image);
         imagedestroy($image_p);
+
+        return 'public/' . $directory . $processedImageName;
     }
 }
-
-
