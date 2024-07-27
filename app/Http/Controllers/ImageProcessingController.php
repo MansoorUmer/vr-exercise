@@ -57,7 +57,7 @@ class ImageProcessingController extends Controller
     private function resizeImage($sourcePath, $destPath, $width, $height)
     {
         $imageType = exif_imagetype($sourcePath);
-
+        dd($imageType);
         switch ($imageType) {
             case IMAGETYPE_JPEG:
                 $image = imagecreatefromjpeg($sourcePath);
