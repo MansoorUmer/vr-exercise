@@ -188,13 +188,13 @@ class ImageProcessingController extends Controller
             $decodedImage = base64_decode($base64Image[1]);
             $originalImageName = 'original_image_' . $index . '.jpg';
             $originalImagePath = 'uploads/originals/' . $originalImageName;
-            Storage::disk('public')->put($originalImagePath, $decodedImage);
+            file_put_contents(public_path($originalImagePath), $decodedImage);
 
             // Preprocess the image (resize)
-            $processedImage = ImageFacade::make(storage_path('app/public/' . $originalImagePath))->resize(224, 224)->encode('jpg');
+            $processedImage = ImageFacade::make(public_path($originalImagePath))->resize(224, 224)->encode('jpg');
             $processedImageName = 'processed_image_' . $index . '.jpg';
             $processedImagePath = 'uploads/processed/' . $processedImageName;
-            Storage::disk('public')->put($processedImagePath, (string) $processedImage);
+            file_put_contents(public_path($processedImagePath), (string) $processedImage);
 
             // Store the image details in the database
             $image = new \App\Models\Image();
@@ -203,7 +203,7 @@ class ImageProcessingController extends Controller
             $image->save();
 
             // Call Python script to make prediction
-            $process = new Process([$venvPath, base_path('predict.py'), $modelPath, storage_path('app/public/' . $processedImagePath)]);
+            $process = new Process([$venvPath, base_path('predict.py'), $modelPath, public_path($processedImagePath)]);
             $process->run();
 
             // Log the output and error messages
