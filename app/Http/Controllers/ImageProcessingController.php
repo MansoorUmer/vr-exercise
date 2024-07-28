@@ -143,12 +143,16 @@ class ImageProcessingController extends Controller
             $filename = uniqid() . '.jpg';
 
             // Store image temporarily
-            $imagePath = $tempDir . '/' . $filename;
-            file_put_contents($imagePath, $imageBinary);
+
+            $imageData = Image::make($imageBinary);//->resize(500,500);
+            $imageData->save(public_path('uploads/'.$filename));
+
+//            $imagePath = $tempDir . '/' . $filename;
+//            file_put_contents($imagePath, $imageBinary);
 
             // Call Python script for prediction
 //            $command = 'python model.py ' . $imagePath;
-            $process = new Process(['python3', base_path('predict.py'), $imagePath]);
+            $process = new Process(['python3', base_path('predict.py'), $imageData]);
             $process->run();
 
 //            $output = shell_exec($command);
