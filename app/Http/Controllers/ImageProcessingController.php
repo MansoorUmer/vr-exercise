@@ -175,7 +175,7 @@ class ImageProcessingController extends Controller
     public function processImages(Request $request)
     {
         $images = $request->input('images');
-        $userId = $request->input('user_id'); // Ensure user_id is provided
+        $userId = Auth::user()->id; // Ensure user_id is provided
         $predictions = [];
 
         // Full path to the model file
