@@ -6,6 +6,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use App\Models\Image as ImageModel;
+//use Intervention\Image\Facades\Image;
+use Intervention\Image\Image;
+//use Intervention\Image\Facades\Image;
 use Symfony\Component\Process\Exception\ProcessFailedException;
 use Symfony\Component\Process\Process;
 
@@ -23,7 +26,6 @@ class ImageProcessingController extends Controller
         foreach ($images as $index => $base64Image) {
             // Decode and upload the original image
             $originalImagePath = $this->uploadImage($base64Image, 'originals/');
-
             // Preprocess the image (resize)
             $processedImagePath = $this->resizeImage($originalImagePath, 224, 224, 'processed/');
 
@@ -54,11 +56,12 @@ class ImageProcessingController extends Controller
                 $base64Image = explode(";base64,", $base64Image);
                 $image_base64 = base64_decode($base64Image[1]);
                 $filename = uniqid() . '.jpg';
-                $filePath = storage_path('app/public/' . $directory . $filename);
 
-                file_put_contents($filePath, $image_base64);
+                //Image Intervation
+                $imageData = Image::make($image_base64)->resize(224,224);//->resize(500,500);
+                $imageData->save(public_path('uploads/'.$filename));
 
-                return 'public/' . $directory . $filename;
+                return 'uploads/' .$filename;
             }
 
         return '';
