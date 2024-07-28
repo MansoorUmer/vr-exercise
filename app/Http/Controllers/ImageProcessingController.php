@@ -146,7 +146,7 @@ class ImageProcessingController extends Controller
 
             // Call Python script for prediction
 //            $command = 'python model.py ' . $imagePath;
-            $process = new Process(['python3', base_path('/var/www/vr-excercise/predict.py'), $imagePath, $processedImagePath]);
+            $process = new Process(['python3', base_path('/var/www/vr-excercise/predict.py'), $imagePath]);
             $process->run();
 
 //            $output = shell_exec($command);
