@@ -133,15 +133,17 @@ class ImageProcessingController extends Controller
     {
         $images = $request->input('images');
 
-        $tempDir = public_path('uploads/');
+        $tempDir = public_path('uploads');
 
         $predictions = [];
         foreach ($images as $index => $base64Image) {
             // Decode base64 image
             $imageBinary = base64_decode($base64Image);
 
+            $filename = uniqid() . '.jpg';
+
             // Store image temporarily
-            $imagePath = $tempDir . '/' . $index . '.jpg';
+            $imagePath = $tempDir . '/' . $filename;
             file_put_contents($imagePath, $imageBinary);
 
             // Call Python script for prediction
