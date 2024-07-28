@@ -178,39 +178,50 @@ class ImageProcessingController extends Controller
         $userId = Auth::user()->id;
         $predictions = [];
 
-        // Full path to the model file
+        // Full path to the model file and virtual environment
         $modelPath = public_path('saved_model.h5');
+        $venvPath = base_path('venv/bin/python3'); // Adjust the path to your venv's Python executable
 
         foreach ($images as $index => $base64Image) {
             // Decode the base64 image and save the original image
             $base64Image = explode(";base64,", $base64Image);
             $decodedImage = base64_decode($base64Image[1]);
             $originalImageName = 'original_image_' . $index . '.jpg';
-            $originalImagePath = public_path('uploads/originals/' . $originalImageName);
-            file_put_contents($originalImagePath, $decodedImage);
+            $originalImagePath = 'uploads/originals/' . $originalImageName;
+            Storage::disk('public')->put($originalImagePath, $decodedImage);
 
             // Preprocess the image (resize)
-            $processedImage = ImageFacade::make($originalImagePath)->resize(224, 224)->encode('jpg');
+            $processedImage = ImageFacade::make(storage_path('app/public/' . $originalImagePath))->resize(224, 224)->encode('jpg');
             $processedImageName = 'processed_image_' . $index . '.jpg';
-            $processedImagePath = public_path('uploads/processed/' . $processedImageName);
-            $processedImage->save($processedImagePath);
+            $processedImagePath = 'uploads/processed/' . $processedImageName;
+            Storage::disk('public')->put($processedImagePath, (string) $processedImage);
 
             // Store the image details in the database
             $image = new \App\Models\Image();
             $image->user_id = $userId;
-            $image->image_path = 'uploads/processed/' . $processedImageName;
+            $image->image_path = $processedImagePath;
             $image->save();
 
             // Call Python script to make prediction
-            $process = new Process(['python3', base_path('predict.py'), $modelPath, $processedImagePath]);
+            $process = new Process([$venvPath, base_path('predict.py'), $modelPath, storage_path('app/public/' . $processedImagePath)]);
             $process->run();
 
+            // Log the output and error messages
+            $processOutput = $process->getOutput();
+            $processError = $process->getErrorOutput();
+
             if (!$process->isSuccessful()) {
+                // Log the error for debugging
+                \Log::error('Python Process Failed', [
+                    'output' => $processOutput,
+                    'error' => $processError,
+                ]);
+
                 throw new ProcessFailedException($process);
             }
 
-            $result = $process->getOutput();
-            $predictions[] = ["image" => $index + 1, "result" => trim($result)];
+            $result = trim($processOutput);
+            $predictions[] = ["image" => $index + 1, "result" => $result];
         }
 
         return response()->json(['predictions' => $predictions], 200);
