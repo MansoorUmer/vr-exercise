@@ -183,6 +183,7 @@ class ImageProcessingController extends Controller
 
         foreach ($images as $index => $base64Image) {
             // Decode and save the original image
+            dd($base64Image);
             $base64Image = explode(";base64,", $base64Image);
             $decodedImage = base64_decode($base64Image);
 //            dd($decodedImage);
