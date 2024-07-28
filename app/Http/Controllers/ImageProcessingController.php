@@ -14,7 +14,7 @@ use Symfony\Component\Process\Process;
 
 class ImageProcessingController extends Controller
 {
-    public function processImages(Request $request)
+    public function processImagesold(Request $request)
     {
         $images = $request->input('images');
         $userId = Auth::user()->id; // Ensure user_id is provided
@@ -128,4 +128,42 @@ class ImageProcessingController extends Controller
 
         return 'public/' . $directory . $processedImageName;
     }
+
+    public function processImages(Request $request)
+    {
+        $images = $request->input('images');
+
+        $tempDir = public_path('uploads/');
+
+        $predictions = [];
+        foreach ($images as $index => $base64Image) {
+            // Decode base64 image
+            $imageBinary = base64_decode($base64Image);
+
+            // Store image temporarily
+            $imagePath = $tempDir . '/' . $index . '.jpg';
+            file_put_contents($imagePath, $imageBinary);
+
+            // Call Python script for prediction
+//            $command = 'python model.py ' . $imagePath;
+            $process = new Process(['python3', base_path('/var/www/vr-excercise/predict.py'), $imagePath, $processedImagePath]);
+            $process->run();
+
+//            $output = shell_exec($command);
+//            $prediction = json_decode($output, true);
+
+//            $predictions[] = ['image' => $index + 1, 'result' => $prediction['result']];
+            if (!$process->isSuccessful()) {
+                throw new ProcessFailedException($process);
+            }
+
+            $result = $process->getOutput();
+            $predictions[] = ["image" => $index + 1, "result" => trim($result)];
+            // Delete temporary image
+//            unlink($imagePath);
+        }
+
+        return response()->json(['predictions' => $predictions]);
+    }
+
 }
