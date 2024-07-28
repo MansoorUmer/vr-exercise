@@ -183,10 +183,8 @@ class ImageProcessingController extends Controller
 
         foreach ($images as $index => $base64Image) {
             // Decode and save the original image
-//            dd($base64Image);
             $base64Image = explode(";base64,", $base64Image);
-            $decodedImage = base64_decode($base64Image);
-//            dd($decodedImage);
+            $decodedImage = base64_decode($base64Image[1]);
             $originalImageName = 'original_image_' . $index . '.jpg';
             $originalImagePath = storage_path('app/public/originals/' . $originalImageName);
             Storage::put('public/originals/' . $originalImageName, $decodedImage);
