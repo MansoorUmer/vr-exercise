@@ -175,30 +175,30 @@ class ImageProcessingController extends Controller
     public function processImages(Request $request)
     {
         $images = $request->input('images');
-        $userId = Auth::user()->id; // Ensure user_id is provided
+        $userId = Auth::user()->id;
         $predictions = [];
 
         // Full path to the model file
         $modelPath = public_path('saved_model.h5');
 
         foreach ($images as $index => $base64Image) {
-            // Decode and save the original image
+            // Decode the base64 image and save the original image
             $base64Image = explode(";base64,", $base64Image);
             $decodedImage = base64_decode($base64Image[1]);
             $originalImageName = 'original_image_' . $index . '.jpg';
-            $originalImagePath = storage_path('app/public/originals/' . $originalImageName);
-            Storage::put('public/originals/' . $originalImageName, $decodedImage);
+            $originalImagePath = public_path('uploads/originals/' . $originalImageName);
+            file_put_contents($originalImagePath, $decodedImage);
 
             // Preprocess the image (resize)
             $processedImage = ImageFacade::make($originalImagePath)->resize(224, 224)->encode('jpg');
             $processedImageName = 'processed_image_' . $index . '.jpg';
-            $processedImagePath = storage_path('app/public/processed/' . $processedImageName);
-            Storage::put('public/processed/' . $processedImageName, (string) $processedImage);
+            $processedImagePath = public_path('uploads/processed/' . $processedImageName);
+            $processedImage->save($processedImagePath);
 
             // Store the image details in the database
             $image = new \App\Models\Image();
             $image->user_id = $userId;
-            $image->image_path = 'public/processed/' . $processedImageName;
+            $image->image_path = 'uploads/processed/' . $processedImageName;
             $image->save();
 
             // Call Python script to make prediction
@@ -215,5 +215,6 @@ class ImageProcessingController extends Controller
 
         return response()->json(['predictions' => $predictions], 200);
     }
+
 
 }
